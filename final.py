@@ -6,7 +6,6 @@
 
     '''
 
-    dd
 
 class Board:
     _BLACK = 1
