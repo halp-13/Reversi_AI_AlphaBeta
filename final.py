@@ -6,7 +6,6 @@
 
     '''
 
-
 class Board:
     _BLACK = 1
     _WHITE = 2
@@ -242,7 +241,6 @@ import sys
 class KidAI:
     def __init__(self, player, time_limit=10):
         self.player = player
-        #self.depth = depth
         self. time_limit= time_limit
         self.memoization_table = {}   #Mémoire pour la mémorisation (stockage des résultats précédents)
 
@@ -251,21 +249,28 @@ class KidAI:
         # Continuez à augmenter la profondeur jusqu'à atteindre la limite de temps
         
         for depth in range(1, sys.maxsize):
-            
-            best_move, _ = self.minimax(deepcopy(board), depth, -math.inf, math.inf, True)
-            
             if (time.time() - start_time) >= self.time_limit:
                 break
-        return best_move
+            best_move, _ = self.minimax(deepcopy(board), depth, -math.inf, math.inf, True, start_time)
+            if best_move != None:
+                last_best_move=best_move
 
+            
+        print(time.time() - start_time,depth)
+        if best_move == None:
+            return last_best_move
+        return best_move
+    
+    #Obtention du meilleur coup en utilisant l'approfondissement itératif
     def get_move(self, board):
         best_move = self.IAIterativeDeepening(board)
         return best_move
-
-    def minimax(self, board, depth, alpha, beta, maximizing_player):
+    
+    #Implémentation de l'algorithme de Pruning Alpha-Beta
+    def minimax(self, board, depth, alpha, beta, maximizing_player, start_time):
         #L'algorithme Minimax pour choisir le meilleur mouvement en tenant compte de la profondeur souhaitée
         if depth == 0 or board.is_game_over(): #Si la profondeur est égale à zéro ou si le jeu est terminé, il évalue l'état actuel
-            return None, board.heuristique(self.player)
+            return None, self.evaluate(board)
 
         board_tuple = tuple(tuple(row) for row in board._board)  #Conversion en Tuple pour le hachage
         if (depth, board_tuple) in self.memoization_table: #Si l'état actuel a déjà été calculé, le résultat mémorisé est récupéré
@@ -277,7 +282,11 @@ class KidAI:
             best_move = None
             for move in legal_moves:
                 board.push(move)
-                _, eval = self.minimax(board, depth - 1, alpha, beta, False)
+                _, eval = self.minimax(board, depth - 1, alpha, beta, False, start_time)
+                current_time = time.time()
+                # Vérifier à nouveau la limite de temps
+                if (current_time - start_time) >= self.time_limit:
+                    return best_move, 0  # Retourner le meilleur mouvement jusqu'à présent
                 if eval > max_eval:
                     max_eval = eval
                     best_move = move
@@ -292,7 +301,11 @@ class KidAI:
             best_move = None
             for move in legal_moves:
                 board.push(move)
-                _, eval = self.minimax(board, depth - 1, alpha, beta, True)
+                _, eval = self.minimax(board, depth - 1, alpha, beta, True, start_time)
+                current_time = time.time()
+                # Vérifier à nouveau la limite de temps
+                if (current_time - start_time) >= self.time_limit:
+                    return best_move, -math.inf  # Retourner le meilleur mouvement jusqu'à présent
                 if eval < min_eval:
                     min_eval = eval
                     best_move = move
@@ -302,7 +315,7 @@ class KidAI:
                     break
             self.memoization_table[(depth, board_tuple)] = min_eval
             return best_move, min_eval
-
+    #Utilisation de l'heuristique du jeu pour l'évaluatio
     def evaluate(self, board):
         #Méthode pour évaluer l'état actuel du plateau de jeu et déterminer sa valeur
         num_white, num_black = board.get_nb_pieces()
@@ -325,30 +338,39 @@ class KidAI:
 class LazyAI:
     def __init__(self, player,time_limit=10 ):
         self.player = player
-        #self.depth = depth
         self.time_limit= time_limit
         self.memoization_table = {}   #Mémoire pour la mémorisation (stockage des résultats précédents)
+    
     def IAIterativeDeepening(self, board):
-        start_time = time.time() 
-        # Continuez à augmenter la profondeur jusqu'à atteindre la limite de temps
-        
-        for depth in range(1, sys.maxsize):
-            
-            best_move, _ = self.minimax(deepcopy(board), depth, -math.inf, math.inf, True)
-            
-            if (time.time() - start_time) >= self.time_limit:
-                break
-        return best_move
+        start_time = time.time()  # Début du chronométrage
+        best_move = None
+        best_evaluation = -math.inf
+
+        depth = 1
+        while (time.time() - start_time) < self.time_limit:  # Boucle tant que le temps limite n'est pas atteint
+            legal_moves = board.legal_moves()
+            if not legal_moves:  
+                break  # Arrêter si aucun mouvement légal
+
+            for move in legal_moves:
+                board.push(move)
+                _, current_eval = self.minimax(deepcopy(board), depth, -math.inf, math.inf, True, start_time)  # Évaluation du plateau
+                board.pop()
+
+                if current_eval > best_evaluation:  # Mise à jour du meilleur mouvement et évaluation
+                    best_evaluation = current_eval
+                    best_move = move
+
+            depth += 1  # Incrémentation de la profondeur
+        print(time.time() - start_time,depth)
+        return best_move  # Retour du meilleur mouvement
+
 
     def get_move(self, board):
         best_move = self.IAIterativeDeepening(board)
         return best_move
-    '''def get_move(self, board):
-        # Méthode qui prend un plateau de jeu en entrée et renvoie le meilleur mouvement possible
-        best_move, _ = self.minimax(deepcopy(board), self.depth, -math.inf, math.inf, True)
-        return best_move'''
 
-    def minimax(self, board, depth, alpha, beta, maximizing_player):
+    def minimax(self, board, depth, alpha, beta, maximizing_player, start_time):
         #L'algorithme Minimax pour choisir le meilleur mouvement en tenant compte de la profondeur souhaitée
         if depth == 0 or board.is_game_over(): #Si la profondeur est égale à zéro ou si le jeu est terminé, il évalue l'état actuel
             return None, self.evaluate(board)
@@ -363,7 +385,11 @@ class LazyAI:
             best_move = None
             for move in legal_moves:
                 board.push(move)
-                _, eval = self.minimax(board, depth - 1, alpha, beta, False)
+                _, eval = self.minimax(board, depth - 1, alpha, beta, False, start_time)
+                current_time = time.time()
+                # Vérifier à nouveau la limite de temps
+                if (current_time - start_time) >= self.time_limit:
+                    return best_move, 0  # Retourner le meilleur mouvement jusqu'à présent
                 if eval > max_eval:
                     max_eval = eval
                     best_move = move
@@ -378,7 +404,11 @@ class LazyAI:
             best_move = None
             for move in legal_moves:
                 board.push(move)
-                _, eval = self.minimax(board, depth - 1, alpha, beta, True)
+                _, eval = self.minimax(board, depth - 1, alpha, beta, True, start_time)
+                current_time = time.time()
+                # Vérifier à nouveau la limite de temps
+                if (current_time - start_time) >= self.time_limit:
+                    return best_move, -math.inf  # Retourner le meilleur mouvement jusqu'à présent
                 if eval < min_eval:
                     min_eval = eval
                     best_move = move
@@ -490,8 +520,14 @@ def play_game():
         while not board.is_game_over():
             # Kid AI's turn
             ai_move_kid = ai_player_kid.get_move(board)
-            print("AI Kid plays: ", ai_move_kid[1], ai_move_kid[2])
-            board.push(ai_move_kid)
+
+            if ai_move_kid is not None:
+                print("AI Kid plays: ", ai_move_kid[1], ai_move_kid[2])
+                board.push(ai_move_kid)
+            else:
+                print("No valid move for AI Kid")
+            #print("AI Kid plays: ", ai_move_kid[1], ai_move_kid[2])
+            #board.push(ai_move_kid)
             print(board)
 
             if board.is_game_over():
@@ -499,16 +535,22 @@ def play_game():
 
             # Lazy AI's turn
             ai_move_lazy = ai_player_lazy.get_move(board)
-            print("AI Lazy plays: ", ai_move_lazy[1], ai_move_lazy[2])
-            board.push(ai_move_lazy)
+            if ai_move_lazy is not None:
+                print("AI Lazy plays: ", ai_move_lazy[1], ai_move_lazy[2])
+                board.push(ai_move_lazy)
+            else:
+                print("No valid move for AI Kid")
             print(board)
+            if board.is_game_over():
+                    print("Final board state:")
+                    print(board)
+                    print("Winner: ", "BLACK" if board._nbBLACK > board._nbWHITE else "WHITE")
+
 
         return
 
     print("Game over!")
-    print("Final board state:")
-    print(board)
-    print("Winner: ", "BLACK" if board._nbBLACK > board._nbWHITE else "WHITE")
+
 
 if __name__ == "__main__":
     play_game()
