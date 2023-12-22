@@ -1,5 +1,6 @@
 - NDIAYE MAGAYE
 - ALIPOUR HASSAN
+
 Projet : Jeu de Reversi 10*10
 Meilleur joueur = KidAI
 Résumé = Utilisation de la technique de la mémorisation pour stocker les recherches précédentes, 
