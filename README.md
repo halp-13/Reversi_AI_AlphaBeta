@@ -1,5 +1,3 @@
-- NDIAYE MAGAYE
-- ALIPOUR HASSAN
 
 Projet : Jeu de Reversi 10*10
 Meilleur joueur = KidAI
