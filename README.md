@@ -1,10 +1,13 @@
 
 Projet : Jeu de Reversi 10*10
+
 Meilleur joueur = KidAI
+
 Résumé = Utilisation de la technique de la mémorisation pour stocker les recherches précédentes, 
 utilisation de l'algorithme Alpha-Beta Pruning pour optimiser Minimax, mise en œuvre d'une limite 
 de temps dans Minimax, de la fonction IAIterativeDeepening, et mise en place d'une heuristique de 
 jeu valorisant davantage les coins du plateau pour améliorer les performances de l'heuristique.
+
 
 Dans notre projet, nous avons implémenté deux intelligences artificielles de la manière suivante :
 
